@@ -18,7 +18,30 @@
   </header>
 
   <main>
-    <section class="gacha-area">
+    <section id="birthForm" class="birth-form">
+      <h2 class="birth-form-title">생년월일을 알려주세요</h2>
+      <p class="birth-form-caption">태어난 날의 기운으로 오늘 하루의 운세가 정해져요!</p>
+      <div class="birth-select-row">
+        <select id="birthYear" class="birth-select" aria-label="태어난 년도">
+          <option value="" disabled selected>년도</option>
+        </select>
+        <select id="birthMonth" class="birth-select" aria-label="태어난 월">
+          <option value="" disabled selected>월</option>
+        </select>
+        <select id="birthDay" class="birth-select" aria-label="태어난 일">
+          <option value="" disabled selected>일</option>
+        </select>
+      </div>
+      <p id="birthError" class="birth-error" hidden>생년월일을 모두 선택해주세요!</p>
+      <button id="birthSubmitBtn" class="draw-btn" type="button">운세 뽑으러 가기</button>
+    </section>
+
+    <section class="gacha-area" id="gachaArea" hidden>
+      <div class="birth-tag-row" id="birthTagRow">
+        <span class="birth-tag" id="birthTag"></span>
+        <button id="birthChangeBtn" class="birth-change-btn" type="button">생년월일 다시 입력</button>
+      </div>
+
       <div class="gacha-machine">
         <div class="card" id="fortuneCard" tabindex="0" role="button" aria-label="운세 뽑기 카드">
           <div class="card-inner">

@@ -37,16 +37,137 @@
   var resultArea = document.getElementById('resultArea');
   var resultAreaEmoji = document.getElementById('resultAreaEmoji');
   var resultText = document.getElementById('resultText');
+  var resultHeading = document.getElementById('resultHeading');
   var luckyBadge = document.getElementById('luckyBadge');
   var retryBtn = document.getElementById('retryBtn');
   var errorNotice = document.getElementById('errorNotice');
 
+  var birthForm = document.getElementById('birthForm');
+  var birthYearSelect = document.getElementById('birthYear');
+  var birthMonthSelect = document.getElementById('birthMonth');
+  var birthDaySelect = document.getElementById('birthDay');
+  var birthError = document.getElementById('birthError');
+  var birthSubmitBtn = document.getElementById('birthSubmitBtn');
+  var gachaArea = document.getElementById('gachaArea');
+  var birthTag = document.getElementById('birthTag');
+  var birthChangeBtn = document.getElementById('birthChangeBtn');
+
+  var RESULT_HEADING_DEFAULT = resultHeading.textContent;
+
   var data = null; // { fortunes, luckyColors, luckyFoods, luckyActions }
   var isBusy = false;
   var timers = [];
+  var birthDate = null; // { year, month, day }
 
   function pickRandom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function pad2(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function daysInMonth(year, month) {
+    return new Date(year, month, 0).getDate();
+  }
+
+  // ---- 생년월일 입력 폼 ----
+  function populateBirthSelects() {
+    var currentYear = new Date().getFullYear();
+    for (var y = currentYear; y >= currentYear - 100; y--) {
+      var yOpt = document.createElement('option');
+      yOpt.value = String(y);
+      yOpt.textContent = y + '년';
+      birthYearSelect.appendChild(yOpt);
+    }
+    for (var m = 1; m <= 12; m++) {
+      var mOpt = document.createElement('option');
+      mOpt.value = String(m);
+      mOpt.textContent = m + '월';
+      birthMonthSelect.appendChild(mOpt);
+    }
+    refreshDayOptions();
+  }
+
+  function refreshDayOptions() {
+    var prevValue = birthDaySelect.value;
+    var year = Number(birthYearSelect.value) || new Date().getFullYear();
+    var month = Number(birthMonthSelect.value) || 1;
+    var total = daysInMonth(year, month);
+
+    birthDaySelect.innerHTML = '<option value="" disabled selected>일</option>';
+    for (var d = 1; d <= total; d++) {
+      var dOpt = document.createElement('option');
+      dOpt.value = String(d);
+      dOpt.textContent = d + '일';
+      birthDaySelect.appendChild(dOpt);
+    }
+    if (prevValue && Number(prevValue) <= total) {
+      birthDaySelect.value = prevValue;
+    }
+  }
+
+  function handleBirthSubmit() {
+    var year = birthYearSelect.value;
+    var month = birthMonthSelect.value;
+    var day = birthDaySelect.value;
+
+    if (!year || !month || !day) {
+      birthError.removeAttribute('hidden');
+      return;
+    }
+    birthError.setAttribute('hidden', '');
+
+    birthDate = { year: Number(year), month: Number(month), day: Number(day) };
+    birthTag.textContent = birthDate.year + '.' + pad2(birthDate.month) + '.' + pad2(birthDate.day) + '생';
+    resultHeading.textContent = birthDate.year + '.' + pad2(birthDate.month) + '.' + pad2(birthDate.day) +
+      '생님의 ' + RESULT_HEADING_DEFAULT;
+
+    birthForm.setAttribute('hidden', '');
+    gachaArea.removeAttribute('hidden');
+  }
+
+  function handleBirthChange() {
+    resetForNewDraw();
+    setControlsDisabled(false);
+    isBusy = false;
+    gachaArea.setAttribute('hidden', '');
+    birthForm.removeAttribute('hidden');
+  }
+
+  // ---- 생년월일 기반 시드 난수 (같은 생년월일 + 같은 날짜 -> 같은 결과) ----
+  function hashSeed(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function mulberry32(seed) {
+    var state = seed >>> 0;
+    return function () {
+      state = (state + 0x6D2B79F5) | 0;
+      var t = Math.imul(state ^ (state >>> 15), 1 | state);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function getTodayString() {
+    var now = new Date();
+    return now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '-' + pad2(now.getDate());
+  }
+
+  function createDailyRng() {
+    var seedStr = birthDate.year + '-' + pad2(birthDate.month) + '-' + pad2(birthDate.day) +
+      '|' + getTodayString();
+    return mulberry32(hashSeed(seedStr));
+  }
+
+  function pickWithRng(arr, rng) {
+    return arr[Math.floor(rng() * arr.length)];
   }
 
   function clearTimers() {
@@ -65,10 +186,10 @@
   }
 
   // 행운템: 카테고리 먼저 랜덤 선택 -> 그 안에서 항목 1개 랜덤 선택
-  function pickLuckyItem() {
+  function pickLuckyItem(rng) {
     var categories = ['luckyColors', 'luckyFoods', 'luckyActions'];
-    var category = pickRandom(categories);
-    var item = pickRandom(data[category]);
+    var category = pickWithRng(categories, rng);
+    var item = pickWithRng(data[category], rng);
     var icon = CATEGORY_META[category].icon;
     return {
       category: category,
@@ -102,9 +223,10 @@
   }
 
   function drawResult() {
-    var fortune = pickRandom(data.fortunes);
-    var lucky = pickLuckyItem();
-    var emoji = pickRandom(TONE_EMOJI[fortune.tone] || TONE_EMOJI.neutral);
+    var rng = createDailyRng();
+    var fortune = pickWithRng(data.fortunes, rng);
+    var lucky = pickLuckyItem(rng);
+    var emoji = pickWithRng(TONE_EMOJI[fortune.tone] || TONE_EMOJI.neutral, rng);
     var html = buildFortuneHTML(fortune);
 
     // 카드 뒷면
@@ -175,6 +297,12 @@
   }
 
   function init() {
+    populateBirthSelects();
+    birthYearSelect.addEventListener('change', refreshDayOptions);
+    birthMonthSelect.addEventListener('change', refreshDayOptions);
+    birthSubmitBtn.addEventListener('click', handleBirthSubmit);
+    birthChangeBtn.addEventListener('click', handleBirthChange);
+
     fetch('content/fortunes.json')
       .then(function (res) {
         if (!res.ok) {
