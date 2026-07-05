@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>두근두근 오늘의 운세 뽑기</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css">
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page-wrap">
+  <header class="title-area">
+    <h1 id="title">두근두근 오늘의 운세 뽑기</h1>
+    <p id="subtitle">동전 대신 클릭 한 번! 문방구 앞 뽑기 기계처럼 톡- 하고 뽑아보세요</p>
+  </header>
+
+  <main>
+    <section class="gacha-area">
+      <div class="gacha-machine">
+        <div class="card" id="fortuneCard" tabindex="0" role="button" aria-label="운세 뽑기 카드">
+          <div class="card-inner">
+            <div class="card-face card-front">
+              <span class="card-mark">?</span>
+            </div>
+            <div class="card-face card-back" id="cardBack" data-tone="neutral">
+              <span class="result-emoji" id="resultEmoji"></span>
+              <p class="card-back-text" id="cardBackText"></p>
+              <div class="lucky-badge" id="luckyBadgeCard"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="once-notice">
+        <p class="once-notice-main" id="onceNotice">오늘의 운세는 한번만!</p>
+        <p class="once-notice-caption" id="onceNoticeCaption">(사실 몇 번을 뽑아도 뽑기 기계는 화 안 내요 🙊 그래도 오늘의 '진짜 운세'는 딱 하나로 정하는 게 국룰!)</p>
+      </div>
+
+      <button id="drawBtn" class="draw-btn" type="button">톡! 뽑기</button>
+    </section>
+
+    <section id="resultArea" class="result-area" aria-live="polite" hidden>
+      <span class="result-emoji" id="resultAreaEmoji"></span>
+      <h2 id="resultHeading">두구두구... 오늘의 운세는?</h2>
+      <p id="resultText"></p>
+      <div class="lucky-badge" id="luckyBadge"></div>
+      <button id="retryBtn" class="retry-btn" type="button" hidden>한 번 더 뽑아보기 (쉿, 비밀)</button>
+    </section>
+
+    <p id="errorNotice" class="error-notice" hidden>운세 데이터를 불러오지 못했어요. 이 페이지는 로컬 서버(예: <code>npx serve .</code> 또는 <code>python -m http.server</code>)로 열어주세요!</p>
+  </main>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

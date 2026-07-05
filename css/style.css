@@ -1,0 +1,410 @@
+/* =========================================================
+   오늘의 운세 뽑기 — style.css
+   구조: 0.리셋 1.변수 2.기본타이포 3.레이아웃 4.카드 5.버튼
+         6.once-notice 7.결과영역/톤/뱃지 8.장식/애니메이션
+         9.reduced-motion
+   ========================================================= */
+
+/* ---------- 0. 리셋 ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+button { font: inherit; }
+
+/* ---------- 1. 컬러/폰트 변수 ---------- */
+:root {
+  /* 배경 (파스텔) */
+  --bg-top: #FFE9F3;
+  --bg-bottom: #DFF6FF;
+  --bg-gradient: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+
+  /* 서피스 */
+  --surface-white: #FFFFFF;
+
+  /* 텍스트 */
+  --text-primary: #3A2E5C;
+  --text-secondary: #7A7290;
+
+  /* 비비드 포인트 */
+  --accent-pink: #FF5FA2;
+  --accent-pink-hover: #FF3D8F;
+  --accent-purple: #7B61FF;
+  --accent-yellow: #FFD93D;
+  --accent-mint: #4DE1C1;
+
+  /* 카드 프레임/그림자 */
+  --outline-dark: #3A2E5C;
+
+  /* 캡슐(카드 앞면) 그라디언트 */
+  --capsule-top: #FFD1E8;
+  --capsule-bottom: #FF8FC7;
+
+  /* 운세 tone 별 색상 */
+  --tone-good-bg: #FFF3B0;
+  --tone-good-accent: #FFB800;
+  --tone-neutral-bg: #DCEBFF;
+  --tone-neutral-accent: #6FA8FF;
+  --tone-bad-bg: #FFD6D6;
+  --tone-bad-accent: #FF6B6B;
+  --tone-bad-strong: #D6336C;
+
+  /* 폰트 */
+  --font-pixel-lg: 'Galmuri14', 'Galmuri11', monospace;
+  --font-pixel: 'Galmuri11', monospace;
+  --font-pixel-sm: 'Galmuri9', monospace;
+}
+
+/* ---------- 2. 기본 타이포 ---------- */
+html {
+  font-family: var(--font-pixel);
+}
+body {
+  color: var(--text-primary);
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+.title-area {
+  text-align: center;
+}
+#title {
+  font-family: var(--font-pixel-lg);
+  font-size: 24px;
+  line-height: 1.4;
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0 var(--surface-white);
+}
+#subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (min-width: 600px) {
+  #title { font-size: 28px; }
+  #subtitle { font-size: 14px; }
+}
+
+/* ---------- 3. 레이아웃 ---------- */
+.page-wrap {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 24px 16px 40px;
+  background: var(--bg-gradient);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+@media (min-width: 600px) {
+  .page-wrap { max-width: 480px; padding: 40px 24px 56px; }
+}
+
+main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.gacha-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ---------- 4. 뽑기 기계 프레임 (장식) ---------- */
+.gacha-machine {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 24px 12px 32px;
+}
+.gacha-machine::before {
+  /* 유리 돔 느낌의 은은한 배경 원 */
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 260px;
+  height: 260px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.15) 60%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+.gacha-machine::after {
+  /* 기계 받침대 */
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 180px;
+  height: 20px;
+  transform: translateX(-50%);
+  background: var(--accent-purple);
+  border: 3px solid var(--outline-dark);
+  box-shadow: 4px 4px 0 0 rgba(58, 46, 92, 0.35);
+  z-index: 0;
+}
+
+/* ---------- 5. 카드 컴포넌트 ---------- */
+.card {
+  position: relative;
+  z-index: 1;
+  width: 200px;
+  height: 260px;
+  perspective: 800px;
+  cursor: pointer;
+}
+.card.is-busy {
+  opacity: .9;
+  pointer-events: none;
+  cursor: default;
+}
+@media (min-width: 600px) {
+  .card { width: 240px; height: 300px; }
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+}
+.card.is-flipped .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+  border: 4px solid var(--outline-dark);
+  box-shadow:
+    0 0 0 3px var(--surface-white),
+    0 0 0 6px var(--outline-dark),
+    6px 6px 0 0 rgba(58, 46, 92, 0.35);
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.card-front {
+  background: linear-gradient(180deg, var(--capsule-top) 0%, var(--capsule-bottom) 100%);
+}
+.card-front::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 48%;
+  height: 4px;
+  background: var(--outline-dark);
+  opacity: .25;
+}
+.card-front .card-mark {
+  font-family: var(--font-pixel-lg);
+  font-size: 64px;
+  color: var(--surface-white);
+  text-shadow: 4px 4px 0 var(--outline-dark);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  background: var(--tone-neutral-bg);
+  gap: 8px;
+}
+.card-back .result-emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+.card-back-text {
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-line;
+  color: var(--text-primary);
+}
+.card-back .lucky-badge {
+  font-size: 10px;
+  padding: 4px 10px;
+  margin-top: 0;
+}
+
+.card-back[data-tone="good"]    { background: var(--tone-good-bg); border-color: var(--tone-good-accent); }
+.card-back[data-tone="neutral"] { background: var(--tone-neutral-bg); border-color: var(--tone-neutral-accent); }
+.card-back[data-tone="bad"]     { background: var(--tone-bad-bg); border-color: var(--tone-bad-accent); }
+
+/* ---------- 6. once-notice ---------- */
+.once-notice {
+  text-align: center;
+}
+.once-notice-main {
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: var(--accent-pink-hover);
+  background: var(--surface-white);
+  display: inline-block;
+  padding: 8px 14px;
+  border: 3px solid var(--outline-dark);
+  box-shadow: 3px 3px 0 var(--outline-dark);
+  margin: 0 0 6px;
+  transform: rotate(-2deg);
+}
+.once-notice-caption {
+  font-family: var(--font-pixel-sm);
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ---------- 5(계속). 버튼 ---------- */
+.draw-btn,
+.retry-btn {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  padding: 14px 0;
+  background: var(--accent-pink);
+  color: #FFFFFF;
+  font-family: var(--font-pixel);
+  font-size: 15px;
+  border: 3px solid var(--outline-dark);
+  box-shadow: 4px 4px 0 var(--outline-dark);
+  cursor: pointer;
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.1s ease-out;
+}
+.draw-btn:hover,
+.retry-btn:hover {
+  background: var(--accent-pink-hover);
+}
+.draw-btn:active,
+.retry-btn:active {
+  background: var(--accent-pink-hover);
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--outline-dark);
+}
+.draw-btn:disabled,
+.retry-btn:disabled,
+.draw-btn.is-disabled {
+  opacity: .6;
+  pointer-events: none;
+}
+
+@media (min-width: 600px) {
+  .draw-btn, .retry-btn { padding: 14px 40px; width: auto; }
+}
+
+/* ---------- 7. 결과 영역 ---------- */
+.result-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  background: var(--surface-white);
+  border: 4px solid var(--outline-dark);
+  box-shadow:
+    0 0 0 3px var(--surface-white) inset,
+    6px 6px 0 0 rgba(58, 46, 92, 0.35);
+  padding: 20px 16px;
+}
+.result-area[hidden] { display: none; }
+
+.result-area .result-emoji {
+  font-size: 40px;
+  line-height: 1;
+}
+#resultHeading {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  margin: 0;
+  color: var(--text-primary);
+}
+#resultText {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-line;
+  color: var(--text-primary);
+}
+
+.advice-highlight {
+  color: var(--tone-bad-strong);
+  font-weight: bold;
+}
+
+.lucky-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-white);
+  border: 3px solid var(--text-primary);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: var(--font-pixel-sm);
+  font-size: 13px;
+  box-shadow: 3px 3px 0 var(--text-primary);
+  margin-top: 12px;
+}
+
+.error-notice {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: var(--tone-bad-strong);
+  background: var(--surface-white);
+  border: 3px dashed var(--tone-bad-accent);
+  padding: 12px;
+  line-height: 1.6;
+}
+
+/* ---------- 8. 애니메이션 ---------- */
+@keyframes shuffle {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  15%  { transform: translateX(-8px) rotate(-4deg); }
+  30%  { transform: translateX(8px)  rotate(4deg); }
+  45%  { transform: translateX(-6px) rotate(-3deg); }
+  60%  { transform: translateX(6px)  rotate(3deg); }
+  75%  { transform: translateX(-3px) rotate(-2deg); }
+  90%  { transform: translateX(3px)  rotate(1deg); }
+}
+.card.is-shuffling { animation: shuffle 0.6s ease-in-out 1; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.result-area.is-visible { animation: fadeInUp 0.3s ease-out forwards; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: .3; transform: scale(0.8); }
+  50%      { opacity: 1;  transform: scale(1.1); }
+}
+.gacha-machine .sparkle {
+  position: absolute;
+  font-size: 18px;
+  animation: twinkle 1.8s ease-in-out infinite;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ---------- 9. 접근성: reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .card.is-shuffling { animation-duration: 0.01ms; }
+  .result-area.is-visible { animation-duration: 0.01ms; }
+  .card-inner { transition-duration: 0.01ms; }
+  .gacha-machine .sparkle { animation-duration: 0.01ms; }
+}
